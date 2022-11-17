@@ -7,10 +7,10 @@ importers:
 
   plugin:
     specifiers:
-      '@electron-forge/core-utils': 6.0.1
-      '@electron-forge/plugin-base': 6.0.1
-      '@electron-forge/shared-types': 6.0.1
-      '@electron-forge/web-multi-logger': 6.0.1
+      '@electron-forge/core-utils': 6.0.3
+      '@electron-forge/plugin-base': 6.0.3
+      '@electron-forge/shared-types': 6.0.3
+      '@electron-forge/web-multi-logger': 6.0.3
       '@types/debug': ^4.1.7
       '@types/node': ^18.11.9
       chalk: ^5.1.2
@@ -19,10 +19,10 @@ importers:
       typescript: ^4.9.3
       vite: ^3.2.4
     dependencies:
-      '@electron-forge/core-utils': 6.0.1
-      '@electron-forge/plugin-base': 6.0.1
-      '@electron-forge/shared-types': 6.0.1
-      '@electron-forge/web-multi-logger': 6.0.1
+      '@electron-forge/core-utils': 6.0.3
+      '@electron-forge/plugin-base': 6.0.3
+      '@electron-forge/shared-types': 6.0.3
+      '@electron-forge/web-multi-logger': 6.0.3
       chalk: 5.1.2
       debug: 4.3.4
       rollup: 2.79.1
@@ -34,9 +34,9 @@ importers:
 
   vite:
     specifiers:
-      '@electron-forge/shared-types': 6.0.1
-      '@electron-forge/template-base': 6.0.1
-      '@electron-forge/test-utils': 6.0.1
+      '@electron-forge/shared-types': 6.0.3
+      '@electron-forge/template-base': 6.0.3
+      '@electron-forge/test-utils': 6.0.3
       '@types/fs-extra': ^9.0.13
       '@types/node': ^18.11.9
       chai: ^4.3.3
@@ -44,11 +44,11 @@ importers:
       listr2: ^5.0.3
       typescript: ^4.9.3
     dependencies:
-      '@electron-forge/shared-types': 6.0.1
-      '@electron-forge/template-base': 6.0.1
+      '@electron-forge/shared-types': 6.0.3
+      '@electron-forge/template-base': 6.0.3
       fs-extra: 10.1.0
     devDependencies:
-      '@electron-forge/test-utils': 6.0.1
+      '@electron-forge/test-utils': 6.0.3
       '@types/fs-extra': 9.0.13
       '@types/node': 18.11.9
       chai: 4.3.7
@@ -60,11 +60,11 @@ importers:
 
 packages:
 
-  /@electron-forge/core-utils/6.0.1:
-    resolution: {integrity: sha512-ydyDDYF2h1ubBMOTLXxwjDHR8/geB7swGq3GJclXGvoA4hDFbJ1J0M3UBzxn7mHZwPc138Q/eiqDUdzOuG6LPQ==}
+  /@electron-forge/core-utils/6.0.3:
+    resolution: {integrity: sha512-o5NINLD2D62wq00hK8QJxZNPu32pLv5M7vgfJ/gBAUvKm9r8wbREVJOK5BZiUX9Abb17MqmdQ6ajbtJiXNX47A==}
     engines: {node: '>= 14.17.5'}
     dependencies:
-      '@electron-forge/shared-types': 6.0.1
+      '@electron-forge/shared-types': 6.0.3
       '@electron/rebuild': 3.2.10
       '@malept/cross-spawn-promise': 2.0.0
       chalk: 4.1.2
@@ -80,19 +80,19 @@ packages:
       - supports-color
     dev: false
 
-  /@electron-forge/plugin-base/6.0.1:
-    resolution: {integrity: sha512-KGcXId0NQr0UtM8jaA8oZT/jaxdM4I1gsmB0f233UwtlN1Yh8lkFPcmgc0AqOPNHkaCuRRGA2sxF2bEdQAaLGQ==}
+  /@electron-forge/plugin-base/6.0.3:
+    resolution: {integrity: sha512-WCNStkmpo60wzaPMkTMXteoEebsWaLMjaOpkIEVG5RCPR5YmJgLcFkaXLVheR0whPKxuRn/0f4C2mwoWPKdh7w==}
     engines: {node: '>= 14.17.5'}
     dependencies:
-      '@electron-forge/shared-types': 6.0.1
+      '@electron-forge/shared-types': 6.0.3
     transitivePeerDependencies:
       - bluebird
       - enquirer
       - supports-color
     dev: false
 
-  /@electron-forge/shared-types/6.0.1:
-    resolution: {integrity: sha512-htQjbiQY7ijuB8LGLiFtOY7qTW06YrvxFavlxOjzQnu4q7VooOZFE9pQpNxg0YgI59ntF/1x2Ad3Az+TjiuqHw==}
+  /@electron-forge/shared-types/6.0.3:
+    resolution: {integrity: sha512-KHY3W1GrXN6jcvRJu4S8EWVAEtJ3FVugOlG37QiEkh8WV8VxxKRB2Z5IR6RDZ6pu4ijCM+/9uVmrNCCjBRPXqg==}
     engines: {node: '>= 14.17.5'}
     dependencies:
       '@electron/rebuild': 3.2.10
@@ -104,11 +104,11 @@ packages:
       - supports-color
     dev: false
 
-  /@electron-forge/template-base/6.0.1:
-    resolution: {integrity: sha512-Ougm83ZsCQ5BY5FU0UIV/+AJvw//CK7Y0AhO3k52v1/C5SN95d7XTJOgLiWeD4LiGvsppk8wPHnSfwWztLCw5A==}
+  /@electron-forge/template-base/6.0.3:
+    resolution: {integrity: sha512-7Zj6ObH0fk5AYivFyYU/5uClC30TmJHxU/jPMzzikn/3zymt6ekm+uXkUgi+G4zDnmHNSj7fGaqYl0KmAQf8/w==}
     engines: {node: '>= 14.17.5'}
     dependencies:
-      '@electron-forge/shared-types': 6.0.1
+      '@electron-forge/shared-types': 6.0.3
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.3.4
       fs-extra: 10.1.0
@@ -119,8 +119,8 @@ packages:
       - supports-color
     dev: false
 
-  /@electron-forge/test-utils/6.0.1:
-    resolution: {integrity: sha512-SJDbu1MxJm2UDk338LPd8X4TL8dDXLbYbwDSoePricYQsU3q6Dy9vSQeNSmfmppPXbVIUJdSM89ueT3ccMnEPw==}
+  /@electron-forge/test-utils/6.0.3:
+    resolution: {integrity: sha512-Ic02a1UkbCy+/yG9y5DMHvP4gnuN/o6rbTV/YIwc4ihAtw1blIkrTaz8ewIJz453ue/dv8CP8KMiIWEkkCgyOQ==}
     engines: {node: '>= 14.17.5'}
     dependencies:
       '@malept/cross-spawn-promise': 2.0.0
@@ -128,8 +128,8 @@ packages:
       fs-extra: 10.1.0
     dev: true
 
-  /@electron-forge/web-multi-logger/6.0.1:
-    resolution: {integrity: sha512-HpKM7cEf54lQeTTMCJbYDDx3BQW+vKkiQnlR1fkbi2iynG7I1a1ZBKyWT7w1G51PzaqFHc4lpUJs0lVYy8whVw==}
+  /@electron-forge/web-multi-logger/6.0.3:
+    resolution: {integrity: sha512-G5I2asCjqo85b+F9oNO5QzlDTQqpdF7guEPGSpznV+mUg/8NCuewFft6+fxbR88G9boOuXBkQNLLgALeK3gf1Q==}
     engines: {node: '>= 14.17.5'}
     dependencies:
       express: 4.18.2
