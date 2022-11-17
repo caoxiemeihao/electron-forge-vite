@@ -35,7 +35,10 @@ class ViteTemplate extends BaseTemplate {
             path.resolve(directory, 'src', 'main.js')
           );
 
-          await this.updateFileByLine(path.resolve(directory, 'src', 'index.html'), (line) => {
+          // TODO: Compatible with any path entry.
+          // Vite uses index.html under the root path as the entry point.
+          fs.moveSync(path.join(directory, 'src', 'index.html'), directory);
+          await this.updateFileByLine(path.join(directory, 'index.html'), (line) => {
             if (line.includes('link rel="stylesheet"')) return '';
             if (line.includes('</body>')) return '    <script type="module" src="/renderer.js"></script>\n  </body>';
             return line;
