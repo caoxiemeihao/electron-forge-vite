@@ -1,0 +1,14 @@
+{
+  "name": "electron-forge-template-vite-typescript",
+  "version": "0.0.1",
+  "description": "Vite template of @electron/forge",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caoxiemeihao/electron-forge-template.git",
+    "directory": "vite-typescript"
+  },
+  "author": "caoxiemeihao",
+  "license": "MIT",
+  "scripts": {}
+}
