@@ -1,5 +1,5 @@
 {
   "devDependencies": {
-    "@electron-forge/plugin-vite": "ELECTRON_FORGE/VERSION"
+    "electron-forge-plugin-vite": "^0.0.1"
   }
 }
