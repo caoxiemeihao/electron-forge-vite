@@ -8,7 +8,7 @@ This plugin makes it easy to set up standard vite tooling to compile both your m
 module.exports = {
   plugins: [
     {
-      name: '@electron-forge/plugin-vite',
+      name: 'electron-forge-plugin-vite',
       config: {
         main: {
           config: './vite.main.config.js',
@@ -26,7 +26,7 @@ module.exports = {
           ],
         },
       },
-    }
-  ]
+    },
+  ],
 }
 ```
