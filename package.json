@@ -1,0 +1,9 @@
+{
+  "name": "electron-forge-vite-monorepo",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm -r --filter=./* run build",
+    "dev": "pnpm -r --parallel --filter=./* run dev"
+  }
+}
