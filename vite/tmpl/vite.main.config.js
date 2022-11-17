@@ -6,6 +6,9 @@ module.exports = {
        * that runs in the main process.
        */
       entry: './src/main.js',
+      // At present, Electron can only support CommonJs.
+      formats: ['cjs'],
+      fileName: () => 'index.js',
     },
   },
 };

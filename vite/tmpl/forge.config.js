@@ -21,7 +21,7 @@ module.exports = {
   ],
   plugins: [
     {
-      name: '@electron-forge/plugin-vite',
+      name: 'electron-forge-plugin-vite',
       config: {
         main: {
           config: './vite.main.config.js',
