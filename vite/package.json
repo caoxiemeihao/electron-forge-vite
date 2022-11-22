@@ -1,6 +1,6 @@
 {
   "name": "electron-forge-template-vite",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Vite template of @electron/forge",
   "main": "dist/ViteTemplate.js",
   "repository": {

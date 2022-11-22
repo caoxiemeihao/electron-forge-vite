@@ -30,7 +30,6 @@ module.exports = {
           config: './vite.renderer.config.js',
           entryPoints: [
             {
-              html: './src/index.html',
               name: 'main_window',
               preload: {
                 js: './src/preload.js',
