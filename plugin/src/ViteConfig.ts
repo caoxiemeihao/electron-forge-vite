@@ -1,12 +1,14 @@
 import path from 'node:path';
 
 import debug from 'debug';
+import { BuildOptions, ConfigEnv, loadConfigFromFile, UserConfig } from 'vite';
 
 import { VitePluginConfig, VitePluginEntryPoint } from './Config';
+import { externalBuiltins } from './util/plugins';
 
 type ViteMode = 'production' | 'development';
 
-const d = debug('electron-forge:plugin:webpack:webpackconfig');
+const d = debug('electron-forge:plugin:vite:viteconfig');
 
 export default class ViteConfigGenerator {
   private isProd: boolean;
@@ -27,6 +29,12 @@ export default class ViteConfigGenerator {
     this.port = port;
 
     d('Config mode:', this.mode);
+  }
+
+  async resolveConfig(config: string, configEnv: Partial<ConfigEnv> = {}) {
+    configEnv.command ??= 'build'; // should always build.
+    configEnv.mode ??= this.mode;
+    return loadConfigFromFile(configEnv as ConfigEnv, config);
   }
 
   get mode(): ViteMode {
@@ -63,8 +71,61 @@ export default class ViteConfigGenerator {
     return defines;
   }
 
+  async getMainConfig(watch = false): Promise<UserConfig> {
+    if (!this.pluginConfig.main.config) {
+      throw new Error('Required option "main.config" has not been defined');
+    }
+
+    const loadResult = await this.resolveConfig(this.pluginConfig.main.config)!;
+    const { build: userBuild = {}, define: userDefine, plugins = [], ...userConfig } = loadResult!.config;
+    const build: BuildOptions = {
+      ...userBuild,
+      // User Configuration First Priority.
+      watch: userBuild.watch ?? (watch ? {} : null),
+      outDir: userBuild.outDir ?? path.join(this.baseDir, 'main'),
+    };
+    const define = { ...this.getDefines(), ...userDefine };
+
+    return <UserConfig>{
+      ...userConfig,
+      build,
+      define,
+      plugins: plugins.concat(externalBuiltins()),
+    };
+  }
+
+  async getPreloadConfigForEntryPoint(entryPoint: VitePluginEntryPoint, watch = false): Promise<UserConfig> {
+    let config: UserConfig = {};
+    if (!entryPoint.preload?.js) {
+      return config;
+    }
+    if (entryPoint.preload?.config) {
+      config = (await this.resolveConfig(entryPoint.preload.config))!.config;
+    }
+
+    const { build: userBuild = {}, plugins = [], ...userConfig } = config;
+    const build: BuildOptions = {
+      ...userBuild,
+      // User Configuration First Priority.
+      lib: userBuild.lib ?? {
+        entry: entryPoint.preload.js,
+        // At present, Electron can only support CommonJs.
+        formats: ['cjs'],
+        fileName: () => '[name].js',
+      },
+      watch: userBuild.watch ?? (watch ? {} : null),
+      outDir: path.join(this.baseDir, 'renderer', entryPoint.name),
+    };
+
+    return <UserConfig>{
+      ...userConfig,
+      build,
+      plugins: plugins.concat(externalBuiltins()),
+    };
+  }
+
   private toEnvironmentVariable(entryPoint: VitePluginEntryPoint, preload = false): string {
-    const suffix = preload ? '_PRELOAD_WEBPACK_ENTRY' : '_WEBPACK_ENTRY';
+    const suffix = preload ? '_PRELOAD_VITE_ENTRY' : '_VITE_ENTRY';
     return `${entryPoint.name.toUpperCase().replace(/ /g, '_')}${suffix}`;
   }
 

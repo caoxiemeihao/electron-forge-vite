@@ -10,7 +10,6 @@ import { RollupWatcher } from 'rollup';
 import { default as vite } from 'vite';
 
 import { VitePluginConfig } from './Config';
-import { externalBuiltins } from './util/plugins';
 import ViteConfigGenerator from './ViteConfig';
 
 const d = debug('electron-forge:plugin:vite');
@@ -108,16 +107,9 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
 
   compileMain = async (watch = false): Promise<void> => {
     const buildResult = await vite.build({
-      configFile: this.config.main.config,
-
-      // However, bllow config options aways merge into `configFile`.
-      // This means it has higher priority, which may be opinionated.
-      build: {
-        watch: watch ? {} : null,
-        outDir: path.join(this.baseDir, 'main'),
-      },
-      define: (await this.configGenerator).getDefines(),
-      plugins: [externalBuiltins()],
+      // Avoid recursive builds caused by users configuring @electron-forge/plugin-vite in vite.config.js
+      configFile: false,
+      ...(await this.configGenerator).getMainConfig(watch),
     });
 
     if (watch) {
@@ -129,8 +121,12 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     const { config: configFile, entryPoints } = this.config.renderer;
 
     for (const entry of entryPoints) {
+      // Build each EntryPoint separately to ensure they can be built to different subfolders. 🤔
       await vite.build({
         configFile,
+
+        // However, bllow config options aways merge into `configFile`.
+        // This means it has higher priority, which may be opinionated.
         build: {
           outDir: path.join(this.baseDir, 'renderer', entry.name),
           // rollupOptions: {
@@ -146,20 +142,10 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   compilePreload = async (watch = false): Promise<void> => {
     await Promise.all(
       this.config.renderer.entryPoints.map(async (entry) => {
-        if (entry.preload) {
+        if (entry.preload?.js) {
           const buildResult = await vite.build({
-            configFile: this.config.main.config,
-            build: {
-              lib: {
-                entry: entry.preload.js,
-                // At present, Electron can only support CommonJs.
-                formats: ['cjs'],
-                fileName: () => '[name].js',
-              },
-              watch: watch ? {} : null,
-              outDir: path.join(this.baseDir, 'renderer', entry.name),
-            },
-            plugins: [externalBuiltins()],
+            configFile: false,
+            ...(await this.configGenerator).getPreloadConfigForEntryPoint(entry, watch),
           });
 
           if (watch) {
