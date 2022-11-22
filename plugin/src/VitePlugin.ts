@@ -7,7 +7,7 @@ import { ForgeMultiHookMap, StartResult } from '@electron-forge/shared-types';
 import debug from 'debug';
 // eslint-disable-next-line node/no-extraneous-import
 import { RollupWatcher } from 'rollup';
-import { default as vite } from 'vite';
+import { loadConfigFromFile, default as vite } from 'vite';
 
 import { VitePluginConfig } from './Config';
 import ViteConfigGenerator from './ViteConfig';
@@ -35,13 +35,14 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   constructor(c: VitePluginConfig) {
     super(c);
 
-    this.configGenerator = new Promise((resolve) => {
-      // eslint-disable-next-line promise/catch-or-return
-      vite.resolveConfig({ configFile: this.config.renderer.config }, 'serve').then((resolvedConfig) => {
-        // Get the user to set port in vite config file.
-        resolve(new ViteConfigGenerator(this.config, this.projectDir, this.isProd, resolvedConfig.server.port ?? VITE_DEV_SERVER_PORT));
-        return;
-      });
+    this.configGenerator = new Promise((resolve, reject) => {
+      loadConfigFromFile({ command: 'serve', mode: 'development' }, this.config.renderer.config)
+        .then((loadResult) => {
+          // Get the user to set port in Vite config file.
+          resolve(new ViteConfigGenerator(this.config, this.projectDir, this.isProd, loadResult?.config.server?.port ?? VITE_DEV_SERVER_PORT));
+          return;
+        })
+        .catch(reject);
     });
   }
 
@@ -107,9 +108,9 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
 
   compileMain = async (watch = false): Promise<void> => {
     const buildResult = await vite.build({
-      // Avoid recursive builds caused by users configuring @electron-forge/plugin-vite in vite.config.js
+      // Avoid recursive builds caused by users configuring @electron-forge/plugin-vite in Vite config file.
       configFile: false,
-      ...(await this.configGenerator).getMainConfig(watch),
+      ...(await (await this.configGenerator).getMainConfig(watch)),
     });
 
     if (watch) {
@@ -145,7 +146,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
         if (entry.preload?.js) {
           const buildResult = await vite.build({
             configFile: false,
-            ...(await this.configGenerator).getPreloadConfigForEntryPoint(entry, watch),
+            ...(await (await this.configGenerator).getPreloadConfigForEntryPoint(entry, watch)),
           });
 
           if (watch) {
