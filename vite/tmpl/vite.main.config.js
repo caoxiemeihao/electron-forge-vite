@@ -1,7 +1,3 @@
-const { builtinModules } = require('module');
-
-const builtins = builtinModules.filter((m) => !m.startsWith('_'));
-
 module.exports = {
   build: {
     lib: {
@@ -13,9 +9,6 @@ module.exports = {
       // At present, Electron can only support CommonJs.
       formats: ['cjs'],
       fileName: () => 'index.js',
-    },
-    rollupOptions: {
-      external: ['electron', ...builtins, ...builtins.map((m) => `node:${m}`)],
     },
   },
 };

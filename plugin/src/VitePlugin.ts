@@ -10,10 +10,11 @@ import { RollupWatcher } from 'rollup';
 import { default as vite } from 'vite';
 
 import { VitePluginConfig } from './Config';
+import { externalBuiltins } from './util/plugins';
 import ViteConfigGenerator from './ViteConfig';
 
 const d = debug('electron-forge:plugin:vite');
-const DEFAULT_PORT = 3000;
+const VITE_DEV_SERVER_PORT = 5173;
 
 export default class VitePlugin extends PluginBase<VitePluginConfig> {
   name = 'vite';
@@ -39,7 +40,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
       // eslint-disable-next-line promise/catch-or-return
       vite.resolveConfig({ configFile: this.config.renderer.config }, 'serve').then((resolvedConfig) => {
         // Get the user to set port in vite config file.
-        resolve(new ViteConfigGenerator(this.config, this.projectDir, this.isProd, resolvedConfig.server.port ?? DEFAULT_PORT));
+        resolve(new ViteConfigGenerator(this.config, this.projectDir, this.isProd, resolvedConfig.server.port ?? VITE_DEV_SERVER_PORT));
         return;
       });
     });
@@ -110,11 +111,13 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
       configFile: this.config.main.config,
 
       // However, bllow config options aways merge into `configFile`.
+      // This means it has higher priority, which may be opinionated.
       build: {
         watch: watch ? {} : null,
         outDir: path.join(this.baseDir, 'main'),
       },
       define: (await this.configGenerator).getDefines(),
+      plugins: [externalBuiltins()],
     });
 
     if (watch) {
@@ -128,13 +131,11 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     for (const entry of entryPoints) {
       await vite.build({
         configFile,
-
-        // However, bllow config options aways merge into `configFile`.
         build: {
           outDir: path.join(this.baseDir, 'renderer', entry.name),
-          rollupOptions: {
-            input: entry.html,
-          },
+          // rollupOptions: {
+          //   input: entry.html,
+          // },
         },
       });
     }
@@ -148,8 +149,6 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
         if (entry.preload) {
           const buildResult = await vite.build({
             configFile: this.config.main.config,
-
-            // However, bllow config options aways merge into `configFile`.
             build: {
               lib: {
                 entry: entry.preload.js,
@@ -160,6 +159,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
               watch: watch ? {} : null,
               outDir: path.join(this.baseDir, 'renderer', entry.name),
             },
+            plugins: [externalBuiltins()],
           });
 
           if (watch) {
@@ -171,16 +171,16 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   };
 
   launchRendererDevServers = async (): Promise<void> => {
-    const { config: configFile, entryPoints } = this.config.renderer;
+    const { config: configFile } = this.config.renderer;
     const viteDevServer = await vite.createServer({
       configFile,
-
-      // However, bllow config options aways merge into `configFile`.
-      build: {
-        rollupOptions: {
-          input: entryPoints.map((entry) => entry.html),
-        },
-      },
+      // TODO: Support for working in the `vite serve` phase.
+      // `input` only works in `vite build`, which is not compatible with the user-configured `html` entry.
+      // build: {
+      //   rollupOptions: {
+      //     input: entryPoints.map((entry) => entry.html),
+      //   },
+      // },
     });
 
     await viteDevServer.listen();
@@ -213,3 +213,5 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     if (options.exit) process.exit();
   };
 }
+
+export { VitePlugin };
