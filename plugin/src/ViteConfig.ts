@@ -77,12 +77,13 @@ export default class ViteConfigGenerator {
     }
 
     const loadResult = await this.resolveConfig(this.pluginConfig.main.config)!;
-    const { build: userBuild = {}, define: userDefine, plugins = [], ...userConfig } = loadResult!.config;
+    const { build: userBuild, define: userDefine, plugins = [], ...userConfig } = loadResult!.config;
     const build: BuildOptions = {
-      ...userBuild,
+      emptyOutDir: false,
+      outDir: path.join(this.baseDir, 'main'),
+      watch: watch ? {} : null,
       // User Configuration First Priority.
-      watch: userBuild.watch ?? (watch ? {} : null),
-      outDir: userBuild.outDir ?? path.join(this.baseDir, 'main'),
+      ...userBuild,
     };
     const define = { ...this.getDefines(), ...userDefine };
 
@@ -91,6 +92,24 @@ export default class ViteConfigGenerator {
       build,
       define,
       plugins: plugins.concat(externalBuiltins()),
+    };
+  }
+
+  async getRendererConfig(entryPoint: VitePluginEntryPoint): Promise<UserConfig> {
+    const loadResult = await this.resolveConfig(this.pluginConfig.renderer.config)!;
+    const { build: userBuild, ...userConfig } = loadResult!.config;
+    const build: BuildOptions = {
+      outDir: path.join(this.baseDir, 'renderer', entryPoint.name),
+      // rollupOptions: {
+      //   input: entry.html,
+      // },
+      emptyOutDir: false,
+      ...userBuild,
+    };
+
+    return <UserConfig>{
+      build,
+      ...userConfig,
     };
   }
 
@@ -103,18 +122,18 @@ export default class ViteConfigGenerator {
       config = (await this.resolveConfig(entryPoint.preload.config))!.config;
     }
 
-    const { build: userBuild = {}, plugins = [], ...userConfig } = config;
+    const { build: userBuild, plugins = [], ...userConfig } = config;
     const build: BuildOptions = {
-      ...userBuild,
-      // User Configuration First Priority.
-      lib: userBuild.lib ?? {
+      emptyOutDir: false,
+      lib: {
         entry: entryPoint.preload.js,
         // At present, Electron can only support CommonJs.
         formats: ['cjs'],
         fileName: () => '[name].js',
       },
-      watch: userBuild.watch ?? (watch ? {} : null),
       outDir: path.join(this.baseDir, 'renderer', entryPoint.name),
+      watch: watch ? {} : null,
+      ...userBuild,
     };
 
     return <UserConfig>{

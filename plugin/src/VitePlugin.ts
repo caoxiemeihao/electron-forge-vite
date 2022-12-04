@@ -119,22 +119,14 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   };
 
   compileRenderers = async (): Promise<void> => {
-    const { config: configFile, entryPoints } = this.config.renderer;
+    if (!this.config.renderer?.config) {
+      throw new Error('Required option "renderer.config" has not been defined');
+    }
+    const { entryPoints } = this.config.renderer;
 
     for (const entry of entryPoints) {
       // Build each EntryPoint separately to ensure they can be built to different subfolders. 🤔
-      await vite.build({
-        configFile,
-
-        // However, bllow config options aways merge into `configFile`.
-        // This means it has higher priority, which may be opinionated.
-        build: {
-          outDir: path.join(this.baseDir, 'renderer', entry.name),
-          // rollupOptions: {
-          //   input: entry.html,
-          // },
-        },
-      });
+      await vite.build(await (await this.configGenerator).getRendererConfig(entry));
     }
 
     await this.compilePreload();
