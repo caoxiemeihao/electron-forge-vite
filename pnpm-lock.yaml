@@ -7,10 +7,10 @@ importers:
 
   plugin:
     specifiers:
-      '@electron-forge/core-utils': ^6.0.4
-      '@electron-forge/plugin-base': ^6.0.4
-      '@electron-forge/shared-types': ^6.0.4
-      '@electron-forge/web-multi-logger': ^6.0.4
+      '@electron-forge/core-utils': latest
+      '@electron-forge/plugin-base': latest
+      '@electron-forge/shared-types': latest
+      '@electron-forge/web-multi-logger': latest
       '@types/debug': ^4.1.7
       '@types/node': ^18.11.9
       chalk: ^5.1.2
@@ -34,9 +34,9 @@ importers:
 
   vite:
     specifiers:
-      '@electron-forge/shared-types': ^6.0.4
-      '@electron-forge/template-base': ^6.0.4
-      '@electron-forge/test-utils': ^6.0.4
+      '@electron-forge/shared-types': latest
+      '@electron-forge/template-base': latest
+      '@electron-forge/test-utils': latest
       '@types/fs-extra': ^9.0.13
       '@types/node': ^18.11.9
       chai: ^4.3.3
