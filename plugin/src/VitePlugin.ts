@@ -13,7 +13,6 @@ import { VitePluginConfig } from './Config';
 import ViteConfigGenerator from './ViteConfig';
 
 const d = debug('electron-forge:plugin:vite');
-const VITE_DEV_SERVER_PORT = 5173;
 
 export default class VitePlugin extends PluginBase<VitePluginConfig> {
   name = 'vite';
@@ -26,25 +25,11 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   // Where the Vite output is generated. Usually `${projectDir}/.vite`
   private baseDir!: string;
 
-  private configGenerator: Promise<ViteConfigGenerator>;
+  private _configGenerator!: Promise<ViteConfigGenerator>;
 
   private watchers: RollupWatcher[] = [];
 
   private servers: http.Server[] = [];
-
-  constructor(c: VitePluginConfig) {
-    super(c);
-
-    this.configGenerator = new Promise((resolve, reject) => {
-      loadConfigFromFile({ command: 'serve', mode: 'development' }, this.config.renderer.config)
-        .then((loadResult) => {
-          // Get the user to set port in Vite config file.
-          resolve(new ViteConfigGenerator(this.config, this.projectDir, this.isProd, loadResult?.config.server?.port ?? VITE_DEV_SERVER_PORT));
-          return;
-        })
-        .catch(reject);
-    });
-  }
 
   init = (dir: string): void => {
     this.setDirectories(dir);
@@ -56,8 +41,21 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
 
   setDirectories = (dir: string): void => {
     this.projectDir = dir;
-    this.baseDir = path.resolve(dir, '.vite');
+    this.baseDir = path.join(dir, '.vite');
   };
+
+  get configGenerator(): Promise<ViteConfigGenerator> {
+    if (!this._configGenerator) {
+      // TODO: alias(mode: m, config: c)
+      const { mode = 'development', config: configFile } = this.config.CLIOptions ?? {};
+      const command = this.isProd ? 'build' : 'serve';
+      this._configGenerator = loadConfigFromFile({ command, mode }, configFile).then(
+        (result) => new ViteConfigGenerator(this.config, this.projectDir, this.isProd, result)
+      );
+    }
+
+    return this._configGenerator;
+  }
 
   getHooks = (): ForgeMultiHookMap => {
     return {
@@ -66,8 +64,8 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
           this.isProd = true;
           fs.rmSync(this.baseDir, { recursive: true, force: true });
 
-          await this.compileMain();
-          await this.compileRenderers();
+          await this.build();
+          await this.buildRenderer();
         }, 'Building vite bundles'),
       ],
     };
@@ -85,7 +83,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
         {
           title: 'Compiling main process code',
           task: async () => {
-            await this.compileMain(true);
+            await this.build(true);
           },
           options: {
             showTimer: true,
@@ -106,60 +104,34 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     };
   };
 
-  compileMain = async (watch = false): Promise<void> => {
-    const buildResult = await vite.build({
-      // Avoid recursive builds caused by users configuring @electron-forge/plugin-vite in Vite config file.
+  // Main process, Preload scripts and Worker process, etc.
+  build = async (watch = false): Promise<void> => {
+    const configs = (await this.configGenerator).getBuildConfig(watch);
+    for (const userConfig of configs) {
+      const buildResult = await vite.build({
+        // Avoid recursive builds caused by users configuring @electron-forge/plugin-vite in Vite config file.
+        configFile: false,
+        ...(await userConfig),
+      });
+
+      if (Object.keys(buildResult).includes('close')) {
+        this.watchers.push(buildResult as RollupWatcher);
+      }
+    }
+  };
+
+  // Renderer process
+  buildRenderer = async (): Promise<void> => {
+    await vite.build({
       configFile: false,
-      ...(await (await this.configGenerator).getMainConfig(watch)),
+      ...(await this.configGenerator).getRendererConfig(),
     });
-
-    if (watch) {
-      this.watchers.push(buildResult as RollupWatcher);
-    }
-  };
-
-  compileRenderers = async (): Promise<void> => {
-    if (!this.config.renderer?.config) {
-      throw new Error('Required option "renderer.config" has not been defined');
-    }
-    const { entryPoints } = this.config.renderer;
-
-    for (const entry of entryPoints) {
-      // Build each EntryPoint separately to ensure they can be built to different subfolders. 🤔
-      await vite.build(await (await this.configGenerator).getRendererConfig(entry));
-    }
-
-    await this.compilePreload();
-  };
-
-  compilePreload = async (watch = false): Promise<void> => {
-    await Promise.all(
-      this.config.renderer.entryPoints.map(async (entry) => {
-        if (entry.preload?.js) {
-          const buildResult = await vite.build({
-            configFile: false,
-            ...(await (await this.configGenerator).getPreloadConfigForEntryPoint(entry, watch)),
-          });
-
-          if (watch) {
-            this.watchers.push(buildResult as RollupWatcher);
-          }
-        }
-      })
-    );
   };
 
   launchRendererDevServers = async (): Promise<void> => {
-    const { config: configFile } = this.config.renderer;
     const viteDevServer = await vite.createServer({
-      configFile,
-      // TODO: Support for working in the `vite serve` phase.
-      // `input` only works in `vite build`, which is not compatible with the user-configured `html` entry.
-      // build: {
-      //   rollupOptions: {
-      //     input: entryPoints.map((entry) => entry.html),
-      //   },
-      // },
+      configFile: false,
+      ...(await this.configGenerator).getRendererConfig(),
     });
 
     await viteDevServer.listen();
@@ -168,8 +140,6 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     if (viteDevServer.httpServer) {
       this.servers.push(viteDevServer.httpServer);
     }
-
-    await this.compilePreload(true);
   };
 
   exitHandler = (options: { cleanup?: boolean; exit?: boolean }, err?: Error): void => {
