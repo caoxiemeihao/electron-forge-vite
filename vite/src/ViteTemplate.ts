@@ -52,7 +52,7 @@ class ViteTemplate extends BaseTemplate {
           // update package.json entry point
           const pjPath = path.resolve(directory, 'package.json');
           const currentPJ = await fs.readJson(pjPath);
-          currentPJ.main = '.vite/main';
+          currentPJ.main = '.vite/build/main.js';
           await fs.writeJson(pjPath, currentPJ, {
             spaces: 2,
           });
