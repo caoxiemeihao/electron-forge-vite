@@ -1,6 +1,6 @@
 export interface VitePluginBuildConfig {
   /**
-   * Shortcut of `build.lib.entry`.
+   * Alias of `build.lib.entry` in `config`.
    */
   entry?: import('vite').LibraryOptions['entry'];
   /**

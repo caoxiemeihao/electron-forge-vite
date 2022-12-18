@@ -41,7 +41,7 @@ export default class ViteConfigGenerator {
   // Renderer config
   loadResult: LoadResult;
 
-  // Vite's command config。
+  // Vite's command config.
   inlineConfig: InlineConfig;
 
   constructor(pluginConfig: VitePluginConfig, projectDir: string, isProd: boolean, loadResult: LoadResult) {
@@ -72,7 +72,7 @@ export default class ViteConfigGenerator {
 
   getBuildConfig(watch = false): Promise<UserConfig>[] {
     if (!Array.isArray(this.pluginConfig.build)) {
-      throw new Error('"main.config" must be an Array');
+      throw new Error('"config.build" must be an Array');
     }
 
     return this.pluginConfig.build
