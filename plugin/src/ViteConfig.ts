@@ -93,7 +93,7 @@ export default class ViteConfigGenerator {
             // Prevent multiple builds from interfering with each other.
             emptyOutDir: false,
             // 🚧 Multiple builds may conflict.
-            outDir: path.join(this.baseDir, 'main'),
+            outDir: path.join(this.baseDir, 'build'),
             watch: watch ? {} : undefined,
           },
           define: this.getDefines(),
