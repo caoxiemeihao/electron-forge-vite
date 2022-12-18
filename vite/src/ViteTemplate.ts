@@ -20,16 +20,21 @@ class ViteTemplate extends BaseTemplate {
       {
         title: 'Setting up vite configuration',
         task: async () => {
-          await this.copyTemplateFile(directory, 'vite.main.config.js');
-          await this.copyTemplateFile(directory, 'vite.renderer.config.js');
+          await this.copyTemplateFile(directory, 'vite.config.mjs');
+          await this.copyTemplateFile(directory, 'vite.main.config.mjs');
+          await this.copyTemplateFile(directory, 'vite.preload.config.mjs');
           await this.copyTemplateFile(path.join(directory, 'src'), 'renderer.js');
           await this.copyTemplateFile(path.join(directory, 'src'), 'preload.js');
 
           await this.updateFileByLine(
             path.resolve(directory, 'src', 'index.js'),
             (line) => {
-              if (line.includes('mainWindow.loadFile')) return '  mainWindow.loadURL(MAIN_WINDOW_VITE_ENTRY);';
-              if (line.includes('preload: ')) return '      preload: MAIN_WINDOW_PRELOAD_VITE_ENTRY,';
+              if (line.includes('mainWindow.loadFile'))
+                return `  if (VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  }`;
               return line;
             },
             path.resolve(directory, 'src', 'main.js')
@@ -40,7 +45,7 @@ class ViteTemplate extends BaseTemplate {
           fs.moveSync(path.join(directory, 'src', 'index.html'), path.join(directory, 'index.html'));
           await this.updateFileByLine(path.join(directory, 'index.html'), (line) => {
             if (line.includes('link rel="stylesheet"')) return '';
-            if (line.includes('</body>')) return '    <script type="module" src="/src/renderer.js"></script>\n  </body>';
+            if (line.includes('</body>')) return '  <script type="module" src="/src/renderer.js"></script>\n  </body>';
             return line;
           });
 
