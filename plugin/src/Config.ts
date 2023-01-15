@@ -1,12 +1,25 @@
+import type { LibraryOptions } from 'vite';
+
 export interface VitePluginBuildConfig {
   /**
    * Alias of `build.lib.entry` in `config`.
    */
-  entry?: import('vite').LibraryOptions['entry'];
+  entry?: LibraryOptions['entry'];
   /**
    * Vite config file path.
    */
   config?: string;
+}
+
+export interface VitePluginRendererConfig {
+  /**
+   * Human friendly name of your entry point
+   */
+  name: string;
+  /**
+   * Vite config file path.
+   */
+  config: string;
 }
 
 export interface VitePluginConfig {
@@ -15,8 +28,7 @@ export interface VitePluginConfig {
    */
   build: VitePluginBuildConfig[];
   /**
-   * Vite's CLI Options, for serve and build.
-   * @see https://vitejs.dev/guide/cli.html
+   * Renderer process, the first item will be used as the main entry.
    */
-  CLIOptions?: Record<string, any>;
+  renderer: VitePluginRendererConfig[];
 }

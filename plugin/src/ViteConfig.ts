@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import debug from 'debug';
-import { ConfigEnv, InlineConfig, loadConfigFromFile, mergeConfig, UserConfig } from 'vite';
+import { ConfigEnv, loadConfigFromFile, mergeConfig, UserConfig } from 'vite';
 
 import { VitePluginConfig } from './Config';
 import { externalBuiltins } from './util/plugins';
@@ -9,27 +9,12 @@ import { externalBuiltins } from './util/plugins';
 const d = debug('electron-forge:plugin:vite:viteconfig');
 
 /**
- * If LoadResult is null, it means that Vite allows run without config file.
+ * Vite allows zero-config runs, if the user does not provide `vite.config.js`,
+ * then the value of `LoadResult` will become `null`.
  */
 export type LoadResult = Awaited<ReturnType<typeof loadConfigFromFile>>;
 
 export default class ViteConfigGenerator {
-  static resolveInlineConfig(CLIOptions: Record<string, any> = {}): InlineConfig {
-    // TODO: enhance
-    // https://github.com/vitejs/vite/blob/v4.0.1/packages/vite/src/node/cli.ts#L123-L132
-    const { root, base, mode, config: configFile, logLevel, clearScreen, force, ...server } = CLIOptions;
-    return {
-      root,
-      base,
-      mode,
-      configFile,
-      logLevel,
-      clearScreen,
-      optimizeDeps: { force },
-      server,
-    };
-  }
-
   private isProd: boolean;
 
   private pluginConfig: VitePluginConfig;
@@ -38,36 +23,45 @@ export default class ViteConfigGenerator {
 
   private baseDir!: string;
 
-  // Renderer config
-  loadResult: LoadResult;
+  private _rendererConfig!: Promise<UserConfig>[];
 
-  // Vite's command config.
-  inlineConfig: InlineConfig;
-
-  constructor(pluginConfig: VitePluginConfig, projectDir: string, isProd: boolean, loadResult: LoadResult) {
+  constructor(pluginConfig: VitePluginConfig, projectDir: string, isProd: boolean) {
     this.pluginConfig = pluginConfig;
     this.projectDir = projectDir;
     this.baseDir = path.join(projectDir, '.vite');
     this.isProd = isProd;
-    this.loadResult = loadResult;
-    this.inlineConfig = ViteConfigGenerator.resolveInlineConfig(this.pluginConfig.CLIOptions);
 
     d('Config mode:', this.mode);
   }
 
   async resolveConfig(config: string, configEnv: Partial<ConfigEnv> = {}) {
-    configEnv.command ??= 'build'; // should always build.
+    // `command` is to be passed as an arguments when the user export a function in `vite.config.js`.
+    // see - https://vitejs.dev/config/#conditional-config
+    configEnv.command ??= this.isProd ? 'build' : 'serve';
+    // `mode` affects `.env.[mode]` file loading.
     configEnv.mode ??= this.mode;
     return loadConfigFromFile(configEnv as ConfigEnv, config);
   }
 
   get mode(): string {
-    return this.inlineConfig.mode ?? (this.isProd ? 'production' : 'development');
+    // Vite's `mode` can be passed in via command.
+    // Since we are currently using the JavaScript API, we are opinionated defining two default values for mode here.
+    // The `mode` set by the end user in `vite.config.js` has a higher priority.
+    return this.isProd ? 'production' : 'development';
   }
 
-  getDefines(): Record<string, string> {
-    const port = this.loadResult?.config.server?.port ?? 5173;
-    return { VITE_DEV_SERVER_URL: this.isProd ? (undefined as any) : `'http://localhost:${port}'` };
+  async getDefines(): Promise<Record<string, string>> {
+    const configs = this.getRendererConfig();
+    if (configs.length) {
+      // The first item will be used as the main entry.
+      const userConfig = configs[0];
+      return {
+        // There is no guarantee that `prot` will always be available, because it may auto increment.
+        // https://github.com/vitejs/vite/blob/v4.0.4/packages/vite/src/node/http.ts#L170
+        VITE_DEV_SERVER_URL: this.isProd ? (undefined as any) : `'http://localhost:${(await userConfig).server!.port}'`,
+      };
+    }
+    return {};
   }
 
   getBuildConfig(watch = false): Promise<UserConfig>[] {
@@ -96,7 +90,7 @@ export default class ViteConfigGenerator {
             outDir: path.join(this.baseDir, 'build'),
             watch: watch ? {} : undefined,
           },
-          define: this.getDefines(),
+          define: await this.getDefines(),
           plugins: [externalBuiltins()],
         };
         if (config) {
@@ -107,16 +101,27 @@ export default class ViteConfigGenerator {
       });
   }
 
-  getRendererConfig(): UserConfig {
-    return mergeConfig(
-      <UserConfig>{
+  getRendererConfig(): Promise<UserConfig>[] {
+    if (!Array.isArray(this.pluginConfig.renderer)) {
+      throw new Error('"config.renderer" must be an Array');
+    }
+
+    let port = 5173;
+
+    return (this._rendererConfig ??= this.pluginConfig.renderer.map(async ({ name, config }) => {
+      const defaultConfig: UserConfig = {
+        // Ensure that each build config loads the .env file correctly.
+        mode: this.mode,
         // Make sure that Electron can be loaded into the local file using `loadFile` after packaging.
         base: './',
         build: {
-          outDir: path.join(this.baseDir, 'renderer'),
+          outDir: path.join(this.baseDir, 'renderer', name),
         },
-      },
-      this.loadResult?.config ?? {}
-    );
+      };
+      const loadResult = (await this.resolveConfig(config)) ?? { path: '', config: {}, dependencies: [] };
+      loadResult.config.server ??= {};
+      loadResult.config.server.port ??= port++;
+      return mergeConfig(defaultConfig, loadResult.config);
+    }));
   }
 }
