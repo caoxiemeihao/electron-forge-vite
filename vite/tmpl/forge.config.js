@@ -21,10 +21,10 @@ module.exports = {
   ],
   plugins: [
     {
-      name: 'electron-forge-plugin-vite',
+      name: '@electron-forge/plugin-vite',
       config: {
         // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
-        // If you are familiar with Vite configuration, it will look really familiar :)
+        // If you are familiar with Vite configuration, it will look really familiar.
         build: [
           {
             // `entry` is just an alias for `build.lib.entry` in the `config` counterpart file.
@@ -36,11 +36,13 @@ module.exports = {
             config: 'vite.preload.config.mjs',
           },
         ],
-        // Vite command options, see https://vitejs.dev/guide/cli.html
-        CLIOptions: {
-          // The Renderer process is configured just like a normal Vite project.
-          // This will be more in line with what Vite users are used to.
-        },
+        renderer: [
+          // The first item will be used as the main entry.
+          {
+            name: 'main_window',
+            config: 'vite.renderer.config.mjs',
+          },
+        ],
       },
     },
   ],
