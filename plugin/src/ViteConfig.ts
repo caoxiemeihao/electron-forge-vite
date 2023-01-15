@@ -59,6 +59,7 @@ export default class ViteConfigGenerator {
         // There is no guarantee that `prot` will always be available, because it may auto increment.
         // https://github.com/vitejs/vite/blob/v4.0.4/packages/vite/src/node/http.ts#L170
         VITE_DEV_SERVER_URL: this.isProd ? (undefined as any) : `'http://localhost:${(await userConfig).server!.port}'`,
+        VITE_MAIN_WINDOW_NAME: this.pluginConfig.renderer[0].name,
       };
     }
     return {};
@@ -90,6 +91,7 @@ export default class ViteConfigGenerator {
             outDir: path.join(this.baseDir, 'build'),
             watch: watch ? {} : undefined,
           },
+          clearScreen: false,
           define: await this.getDefines(),
           plugins: [externalBuiltins()],
         };
@@ -117,6 +119,7 @@ export default class ViteConfigGenerator {
         build: {
           outDir: path.join(this.baseDir, 'renderer', name),
         },
+        clearScreen: false,
       };
       const loadResult = (await this.resolveConfig(config)) ?? { path: '', config: {}, dependencies: [] };
       loadResult.config.server ??= {};
