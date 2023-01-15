@@ -18,7 +18,7 @@ class ViteTemplate extends BaseTemplate {
         },
       },
       {
-        title: 'Setting up vite configuration',
+        title: 'Setting up Vite configuration',
         task: async () => {
           await this.copyTemplateFile(directory, 'vite.renderer.config.mjs');
           await this.copyTemplateFile(directory, 'vite.main.config.mjs');
@@ -33,7 +33,7 @@ class ViteTemplate extends BaseTemplate {
                 return `  if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    mainWindow.loadFile(path.join(__dirname, \`../renderer/\${VITE_MAIN_WINDOW_NAME}/index.html\`));
   }`;
               return line;
             },
