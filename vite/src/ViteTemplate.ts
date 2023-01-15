@@ -33,7 +33,7 @@ class ViteTemplate extends BaseTemplate {
                 return `  if (VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, \`../renderer/\${VITE_MAIN_WINDOW_NAME}/index.html\`));
+    mainWindow.loadFile(path.join(__dirname, \`../renderer/\${RENDERER_MAIN_WINDOW_NAME}/index.html\`));
   }`;
               return line;
             },
