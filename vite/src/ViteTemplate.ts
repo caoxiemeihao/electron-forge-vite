@@ -30,10 +30,10 @@ class ViteTemplate extends BaseTemplate {
             path.resolve(directory, 'src', 'index.js'),
             (line) => {
               if (line.includes('mainWindow.loadFile'))
-                return `  if (VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(VITE_DEV_SERVER_URL);
+                return `  if (MAIN_WINDOW_VITE_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, \`../renderer/\${RENDERER_MAIN_WINDOW_NAME}/index.html\`));
+    mainWindow.loadFile(path.join(__dirname, \`../renderer/\${MAIN_WINDOW_VITE_NAME}/index.html\`));
   }`;
               return line;
             },
