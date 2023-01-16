@@ -51,18 +51,19 @@ export default class ViteConfigGenerator {
   }
 
   async getDefines(): Promise<Record<string, string>> {
-    const configs = this.getRendererConfig();
-    if (configs.length) {
-      // The first item will be used as the main entry.
-      const userConfig = configs[0];
-      return {
-        // There is no guarantee that `prot` will always be available, because it may auto increment.
-        // https://github.com/vitejs/vite/blob/v4.0.4/packages/vite/src/node/http.ts#L170
-        VITE_DEV_SERVER_URL: this.isProd ? (undefined as any) : `'http://localhost:${(await userConfig).server!.port}'`,
-        RENDERER_MAIN_WINDOW_NAME: JSON.stringify(this.pluginConfig.renderer[0].name),
-      };
+    const defines: Record<string, any> = {};
+    for (const [index, userConfig] of (await Promise.all(this.getRendererConfig())).entries()) {
+      const name = this.pluginConfig.renderer[index].name;
+      if (!name) {
+        continue;
+      }
+      const NAME = name.toUpperCase().replace(/ /g, '_');
+      // There is no guarantee that `prot` will always be available, because it may auto increment.
+      // https://github.com/vitejs/vite/blob/v4.0.4/packages/vite/src/node/http.ts#L170
+      defines[`${NAME}_VITE_SERVER_URL`] = this.isProd ? undefined : userConfig?.server?.port && `'http://localhost:${userConfig.server.port}'`;
+      defines[`${NAME}_VITE_NAME`] = JSON.stringify(name);
     }
-    return {};
+    return defines;
   }
 
   getBuildConfig(watch = false): Promise<UserConfig>[] {
