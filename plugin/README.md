@@ -26,14 +26,12 @@ module.exports = {
           },
         ],
         renderer: [
-          // The first item will be used as the main entry.
           {
             name: 'main_window',
             config: 'vite.renderer.config.mjs',
           },
         ],
       },
-    },
     },
   ],
 }

@@ -9,11 +9,8 @@ export function externalBuiltins() {
   return <Plugin>{
     name: '@electron-forge/plugin-vite:external-builtins',
     config(config) {
-      const builtins = [
-        'electron',
-        ...builtinModules.filter((e) => !e.startsWith('_')),
-        ...builtinModules.filter((e) => !e.startsWith('_')).map((m) => `node:${m}`),
-      ];
+      const nativeModules = builtinModules.filter((e) => !e.startsWith('_'));
+      const builtins = ['electron', ...nativeModules, ...nativeModules.map((m) => `node:${m}`)];
 
       config.build ??= {};
       config.build.rollupOptions ??= {};
