@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 
@@ -15,7 +15,9 @@ import ViteConfigGenerator from './ViteConfig';
 const d = debug('electron-forge:plugin:vite');
 
 export default class VitePlugin extends PluginBase<VitePluginConfig> {
-  name = 'vite';
+  private static alreadyStarted = false;
+
+  public name = 'vite';
 
   private isProd = false;
 
@@ -25,7 +27,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
   // Where the Vite output is generated. Usually `${projectDir}/.vite`
   private baseDir!: string;
 
-  private _configGenerator!: ViteConfigGenerator;
+  private configGeneratorCache!: ViteConfigGenerator;
 
   private watchers: RollupWatcher[] = [];
 
@@ -39,13 +41,13 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     process.on('SIGINT' as NodeJS.Signals, (_signal) => this.exitHandler({ exit: true }));
   };
 
-  setDirectories = (dir: string): void => {
+  private setDirectories(dir: string): void {
     this.projectDir = dir;
     this.baseDir = path.join(dir, '.vite');
-  };
+  }
 
-  get configGenerator(): ViteConfigGenerator {
-    return (this._configGenerator ??= new ViteConfigGenerator(this.config, this.projectDir, this.isProd));
+  private get configGenerator(): ViteConfigGenerator {
+    return (this.configGeneratorCache ??= new ViteConfigGenerator(this.config, this.projectDir, this.isProd));
   }
 
   getHooks = (): ForgeMultiHookMap => {
@@ -53,21 +55,19 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
       prePackage: [
         namedHookWithTaskFn<'prePackage'>(async () => {
           this.isProd = true;
-          fs.rmSync(this.baseDir, { recursive: true, force: true });
+          await fs.rmdir(this.baseDir, { recursive: true });
 
-          await this.build();
-          await this.buildRenderer();
+          await Promise.all([this.build(), this.buildRenderer()]);
         }, 'Building vite bundles'),
       ],
     };
   };
 
-  private alreadyStarted = false;
   startLogic = async (): Promise<StartResult> => {
-    if (this.alreadyStarted) return false;
-    this.alreadyStarted = true;
+    if (VitePlugin.alreadyStarted) return false;
+    VitePlugin.alreadyStarted = true;
 
-    fs.rmSync(this.baseDir, { recursive: true, force: true });
+    await fs.rmdir(this.baseDir, { recursive: true });
 
     return {
       tasks: [
@@ -144,6 +144,7 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
         watcher.close();
       }
       this.watchers = [];
+
       for (const server of this.servers) {
         d('cleaning http server');
         server.close();
