@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "electron-forge-plugin-vite": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
+  }
+}

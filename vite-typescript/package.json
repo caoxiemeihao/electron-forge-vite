@@ -1,14 +1,38 @@
 {
   "name": "electron-forge-template-vite-typescript",
-  "version": "0.0.1",
-  "description": "Vite template of @electron/forge",
-  "main": "index.js",
+  "version": "0.1.5",
+  "description": "Vite TypeScript template of @electron/forge",
+  "main": "dist/ViteTypeScriptTemplate.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/caoxiemeihao/electron-forge-template.git",
     "directory": "vite-typescript"
   },
-  "author": "caoxiemeihao",
+  "author": "草鞋没号 <308487730@qq.com>",
   "license": "MIT",
-  "scripts": {}
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">= 14.18.0"
+  },
+  "dependencies": {
+    "@electron-forge/shared-types": "latest",
+    "@electron-forge/template-base": "latest",
+    "fs-extra": "^10.1.0"
+  },
+  "devDependencies": {
+    "@electron-forge/test-utils": "latest",
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^18.11.9",
+    "chai": "^4.3.3",
+    "listr2": "^5.0.3",
+    "typescript": "^4.9.3"
+  },
+  "files": [
+    "dist",
+    "tmpl"
+  ]
 }
