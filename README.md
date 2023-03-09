@@ -8,11 +8,11 @@ For test `electron-forge` Vite template.
 ```sh
 # npm
 npm i -g electron-forge-template-vite-typescript
-npm create electron-app my-vite-app --template=vite
+npm create electron-app my-vite-app --template=vite-typescript
 
 # yarn
-yarn global add electron-forge-template-vite
-yarn create electron-app my-vite-app --template=vite
+yarn global add electron-forge-template-vite-typescript
+yarn create electron-app my-vite-app --template=vite-typescript
 ```
 
 ## [🔥 Hot restart](https://github.com/caoxiemeihao/electron-forge-vite/tree/main/plugin)
