@@ -36,3 +36,20 @@ module.exports = {
   ],
 };
 ```
+
+## 🔥 Hot restart
+
+> electron-forge-plugin-vite@0.4.0+
+
+```js
+// vite.main.config.mjs    - For Electron Main
+// vite.preload.config.mjs - For Preload Scripts
+
+import { defineConfig } from 'vite';
+import { restart } from 'electron-forge-plugin-vite/plugin';
+
+// https://vitejs.dev/config
+export default defineConfig({
+  plugins: [restart()],
+});
+```

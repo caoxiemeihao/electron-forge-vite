@@ -1,6 +1,6 @@
 {
   "name": "electron-forge-plugin-vite",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "description": "Vite plugin for Electron Forge, lets you use Vite directly in your tooling",
   "repository": {
     "type": "git",
@@ -11,7 +11,7 @@
   "license": "MIT",
   "main": "dist/VitePlugin.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.plugin.json",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"
   },
@@ -34,6 +34,7 @@
     "vite": "^4.0.4"
   },
   "files": [
-    "dist"
+    "dist",
+    "plugin"
   ]
 }

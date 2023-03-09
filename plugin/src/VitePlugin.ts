@@ -67,7 +67,11 @@ export default class VitePlugin extends PluginBase<VitePluginConfig> {
     if (VitePlugin.alreadyStarted) return false;
     VitePlugin.alreadyStarted = true;
 
-    await fs.rmdir(this.baseDir, { recursive: true });
+    try {
+      // Node.js v16+ must check in advance if the directory exists, while v14 works fine
+      await fs.access(this.baseDir)
+      await fs.rmdir(this.baseDir, { recursive: true });
+    } catch { }
 
     return {
       tasks: [
