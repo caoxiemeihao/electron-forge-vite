@@ -1,4 +1,4 @@
-# electron-forge-vite
+# electron-forge-plugin-vite
 
 For test `electron-forge` Vite template.
 
