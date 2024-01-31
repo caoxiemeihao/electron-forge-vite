@@ -1,3 +1,8 @@
+
+**Since [Electron Forge v6.1.1](https://github.com/electron/forge/releases/tag/v6.1.1) started supporting Vite.**
+
+---
+
 # electron-forge-plugin-vite
 
 For test `electron-forge` Vite template.
