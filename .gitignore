@@ -105,3 +105,5 @@ dist
 
 # Vite plugins
 plugin/plugin/
+
+.DS_Store
