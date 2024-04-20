@@ -103,7 +103,11 @@ dist
 # TernJS port file
 .tern-port
 
+# Mac OS
+.DS_Store
+
 # Vite plugins
 plugin/plugin/
 
-.DS_Store
+# Electron Forge migration to v7.3.0
+plugin/migration/

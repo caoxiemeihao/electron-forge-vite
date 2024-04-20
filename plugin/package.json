@@ -11,7 +11,7 @@
   "license": "MIT",
   "main": "dist/VitePlugin.js",
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.plugin.json",
+    "build": "tsc && tsc -p tsconfig.migration.json && tsc -p tsconfig.plugin.json",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"
   },
@@ -35,6 +35,7 @@
   },
   "files": [
     "dist",
-    "plugin"
+    "plugin",
+    "migration"
   ]
 }

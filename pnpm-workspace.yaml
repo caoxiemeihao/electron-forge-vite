@@ -2,3 +2,4 @@ packages:
   - 'plugin'
   - 'vite'
   - 'vite-typescript'
+  - 'migration'
