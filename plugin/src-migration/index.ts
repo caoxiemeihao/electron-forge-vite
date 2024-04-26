@@ -126,7 +126,7 @@ function pluginHotRestart(command: 'reload' | 'restart'): Plugin {
 // ------- vite.main.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.main.config.ts
 
-function main(rawConfig: UserConfigExport): UserConfigFn {
+function main(viteConfig: UserConfigExport): UserConfigFn {
   return async function _main(env): Promise<UserConfig> {
     const forgeEnv = env as ConfigEnv<'build'>
     const { forgeConfigSelf, root } = forgeEnv
@@ -155,7 +155,7 @@ function main(rawConfig: UserConfigExport): UserConfigFn {
     }
 
     const forgeViteConfig = mergeConfig(getBuildConfig(forgeEnv), config)
-    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    const userConfig = await (typeof viteConfig === 'function' ? viteConfig(forgeEnv) : viteConfig)
     return mergeConfig(forgeViteConfig, userConfig)
   }
 }
@@ -166,7 +166,7 @@ function main(rawConfig: UserConfigExport): UserConfigFn {
 // ------- vite.renderer.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.renderer.config.ts
 
-function renderer(rawConfig: UserConfigExport): UserConfigFn {
+function renderer(viteConfig: UserConfigExport): UserConfigFn {
   return async function _renderer(env): Promise<UserConfig> {
     const forgeEnv = env as ConfigEnv<'renderer'>
     const { root, mode, forgeConfigSelf } = forgeEnv
@@ -185,7 +185,7 @@ function renderer(rawConfig: UserConfigExport): UserConfigFn {
       clearScreen: false,
     }
 
-    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    const userConfig = await (typeof viteConfig === 'function' ? viteConfig(forgeEnv) : viteConfig)
     return mergeConfig(conig, userConfig)
   }
 }
@@ -196,7 +196,7 @@ function renderer(rawConfig: UserConfigExport): UserConfigFn {
 // ------- vite.preload.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.preload.config.ts
 
-function preload(rawConfig: UserConfigExport): UserConfigFn {
+function preload(viteConfig: UserConfigExport): UserConfigFn {
   return async function _preload(env): Promise<UserConfig> {
     const forgeEnv = env as ConfigEnv<'build'>
     const { forgeConfigSelf, root } = forgeEnv
@@ -226,7 +226,7 @@ function preload(rawConfig: UserConfigExport): UserConfigFn {
     }
 
     const forgeViteConfig = mergeConfig(getBuildConfig(forgeEnv), config)
-    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    const userConfig = await (typeof viteConfig === 'function' ? viteConfig(forgeEnv) : viteConfig)
     return mergeConfig(forgeViteConfig, userConfig)
   }
 }
