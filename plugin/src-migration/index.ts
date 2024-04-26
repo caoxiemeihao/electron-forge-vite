@@ -6,8 +6,11 @@ import {
   type ConfigEnv,
   type Plugin,
   type UserConfig,
+  type UserConfigFn,
+  type UserConfigExport,
   mergeConfig,
 } from 'vite'
+
 
 function isESModule(packageJson: Record<string, any> = {}) {
   return packageJson.type === 'module'
@@ -123,61 +126,68 @@ function pluginHotRestart(command: 'reload' | 'restart'): Plugin {
 // ------- vite.main.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.main.config.ts
 
-async function main(env: ConfigEnv): Promise<UserConfig> {
-  const forgeEnv = env as ConfigEnv<'build'>
-  const { forgeConfigSelf, root } = forgeEnv
-  const define = getBuildDefine(forgeEnv)
-  const packageJson = await getPackageJson(root)
-  const external = await getExternal(packageJson)
-  const esmodule = isESModule(packageJson)
-  const config: UserConfig = {
-    build: {
-      lib: {
-        entry: forgeConfigSelf.entry!,
-        fileName: () => '[name].js',
-        formats: [esmodule ? 'es' : 'cjs'],
+function main(rawConfig: UserConfigExport): UserConfigFn {
+  return async function _main(env): Promise<UserConfig> {
+    const forgeEnv = env as ConfigEnv<'build'>
+    const { forgeConfigSelf, root } = forgeEnv
+    const define = getBuildDefine(forgeEnv)
+    const packageJson = await getPackageJson(root)
+    const external = await getExternal(packageJson)
+    const esmodule = isESModule(packageJson)
+    const config: UserConfig = {
+      build: {
+        lib: {
+          entry: forgeConfigSelf.entry!,
+          fileName: () => '[name].js',
+          formats: [esmodule ? 'es' : 'cjs'],
+        },
+        rollupOptions: {
+          external,
+        },
       },
-      rollupOptions: {
-        external,
+      plugins: [pluginHotRestart('restart')],
+      define,
+      resolve: {
+        // Load the Node.js entry.
+        conditions: ['node'],
+        mainFields: ['module', 'jsnext:main', 'jsnext'],
       },
-    },
-    plugins: [pluginHotRestart('restart')],
-    define,
-    resolve: {
-      // Load the Node.js entry.
-      conditions: ['node'],
-      mainFields: ['module', 'jsnext:main', 'jsnext'],
-    },
-  }
+    }
 
-  return mergeConfig(getBuildConfig(forgeEnv), config)
+    const forgeViteConfig = mergeConfig(getBuildConfig(forgeEnv), config)
+    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    return mergeConfig(forgeViteConfig, userConfig)
+  }
 }
 
-// ------- vite.main.config.ts ------- S
+// ------- vite.main.config.ts ------- E
 
 
 // ------- vite.renderer.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.renderer.config.ts
 
-async function renderer(env: ConfigEnv): Promise<UserConfig> {
-  const forgeEnv = env as ConfigEnv<'renderer'>
-  const { root, mode, forgeConfigSelf } = forgeEnv
-  const name = forgeConfigSelf.name ?? ''
-  const conig: UserConfig = {
-    root,
-    mode,
-    base: './',
-    build: {
-      outDir: `.vite/renderer/${name}`,
-    },
-    plugins: [pluginExposeRenderer(name)],
-    resolve: {
-      preserveSymlinks: true,
-    },
-    clearScreen: false,
-  }
+function renderer(rawConfig: UserConfigExport): UserConfigFn {
+  return async function _renderer(env): Promise<UserConfig> {
+    const forgeEnv = env as ConfigEnv<'renderer'>
+    const { root, mode, forgeConfigSelf } = forgeEnv
+    const name = forgeConfigSelf.name ?? ''
+    const conig: UserConfig = {
+      root,
+      mode,
+      base: './',
+      build: {
+        outDir: `.vite/renderer/${name}`,
+      },
+      plugins: [pluginExposeRenderer(name)],
+      resolve: {
+        preserveSymlinks: true,
+      },
+      clearScreen: false,
+    }
 
-  return conig
+    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    return mergeConfig(conig, userConfig)
+  }
 }
 
 // ------- vite.renderer.config.ts ------- E
@@ -186,40 +196,44 @@ async function renderer(env: ConfigEnv): Promise<UserConfig> {
 // ------- vite.preload.config.ts ------- S
 // @see - https://github.com/electron/forge/blob/v7.3.0/packages/template/vite-typescript/tmpl/vite.preload.config.ts
 
-async function preload(env: ConfigEnv): Promise<UserConfig> {
-  const forgeEnv = env as ConfigEnv<'build'>
-  const { forgeConfigSelf, root } = forgeEnv
-  const packageJson = await getPackageJson(root)
-  const external = await getExternal(packageJson)
-  const esmodule = isESModule(packageJson)
-  const ext = esmodule ? 'mjs' : 'js'
-  const config: UserConfig = {
-    build: {
-      rollupOptions: {
-        external,
-        // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-        input: forgeConfigSelf.entry!,
-        output: {
-          // https://github.com/electron-vite/vite-plugin-electron/blob/v0.28.5/README.md#built-format
-          // https://github.com/electron-vite/vite-plugin-electron/blob/v0.28.5/src/simple.ts#L56-L82
-          format: 'cjs',
-          // It should not be split chunks.
-          inlineDynamicImports: true,
-          entryFileNames: `[name].${ext}`,
-          chunkFileNames: `[name].${ext}`,
-          assetFileNames: '[name].[ext]',
+function preload(rawConfig: UserConfigExport): UserConfigFn {
+  return async function _preload(env): Promise<UserConfig> {
+    const forgeEnv = env as ConfigEnv<'build'>
+    const { forgeConfigSelf, root } = forgeEnv
+    const packageJson = await getPackageJson(root)
+    const external = await getExternal(packageJson)
+    const esmodule = isESModule(packageJson)
+    const ext = esmodule ? 'mjs' : 'js'
+    const config: UserConfig = {
+      build: {
+        rollupOptions: {
+          external,
+          // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
+          input: forgeConfigSelf.entry!,
+          output: {
+            // https://github.com/electron-vite/vite-plugin-electron/blob/v0.28.5/README.md#built-format
+            // https://github.com/electron-vite/vite-plugin-electron/blob/v0.28.5/src/simple.ts#L56-L82
+            format: 'cjs',
+            // It should not be split chunks.
+            inlineDynamicImports: true,
+            entryFileNames: `[name].${ext}`,
+            chunkFileNames: `[name].${ext}`,
+            assetFileNames: '[name].[ext]',
+          },
         },
       },
-    },
-    plugins: [pluginHotRestart('reload')],
-  }
+      plugins: [pluginHotRestart('reload')],
+    }
 
-  return mergeConfig(getBuildConfig(forgeEnv), config)
+    const forgeViteConfig = mergeConfig(getBuildConfig(forgeEnv), config)
+    const userConfig = await (typeof rawConfig === 'function' ? rawConfig(forgeEnv) : rawConfig)
+    return mergeConfig(forgeViteConfig, userConfig)
+  }
 }
 
 // ------- vite.preload.config.ts ------- E
 
-export const to7_3_0_config = {
+export const forgeViteConfig = {
   main,
   renderer,
   preload,
